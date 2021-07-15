@@ -328,7 +328,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4814746871060205548, guid: 6a52d1a59ec545042a998777a2a7c06d, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8387240029481055765, guid: 6a52d1a59ec545042a998777a2a7c06d, type: 3}
       propertyPath: m_RootOrder
@@ -344,7 +344,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8387240029481055765, guid: 6a52d1a59ec545042a998777a2a7c06d, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.55587924
+      value: -99.4
       objectReference: {fileID: 0}
     - target: {fileID: 8387240029481055765, guid: 6a52d1a59ec545042a998777a2a7c06d, type: 3}
       propertyPath: m_LocalPosition.y
@@ -352,7 +352,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8387240029481055765, guid: 6a52d1a59ec545042a998777a2a7c06d, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 31.5
       objectReference: {fileID: 0}
     - target: {fileID: 8387240029481055765, guid: 6a52d1a59ec545042a998777a2a7c06d, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1202,7 +1202,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1979082488}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 32.2, z: -28.3}
+  m_LocalPosition: {x: 0, y: 24.2, z: -36.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1286,7 +1286,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1983585197}
   m_LocalRotation: {x: 0.38268343, y: 0, z: 0, w: 0.92387956}
-  m_LocalPosition: {x: 24, y: 32.200005, z: 0.2039547}
+  m_LocalPosition: {x: 24, y: 24.200005, z: -8.396048}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1301,31 +1301,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 1983585197}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 72ece51f2901e7445ab60da3685d6b5f, type: 3}
+  m_Script: {fileID: 11500000, guid: b33020ac77fd1c0469fd882a6c1b79e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_ShowDebugText: 0
-  m_ShowCameraFrustum: 1
-  m_IgnoreTimeScale: 0
-  m_WorldUpOverride: {fileID: 0}
-  m_UpdateMethod: 2
-  m_BlendUpdateMethod: 1
-  m_DefaultBlend:
-    m_Style: 1
-    m_Time: 2
-    m_CustomCurve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-  m_CustomBlends: {fileID: 0}
-  m_CameraCutEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_CameraActivatedEvent:
-    m_PersistentCalls:
-      m_Calls: []
+  target: {fileID: 4615118232953982336}
+  offset: {x: 0, y: 0, z: 0}
+  movableArea: {fileID: 1979082489}
+  minX: -95
+  maxX: 95
+  minZ: -30
+  maxZ: 30
 --- !u!1 &2049859087
 GameObject:
   m_ObjectHideFlags: 0
@@ -1482,6 +1467,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4592635121224268185, guid: bf700fb95a1f0f642b6f1b6de3604d57, type: 3}
+      propertyPath: m_Name
+      value: Sprite
+      objectReference: {fileID: 0}
     - target: {fileID: 4959711759834455813, guid: bf700fb95a1f0f642b6f1b6de3604d57, type: 3}
       propertyPath: m_LocalScale.y
       value: 1
@@ -1516,6 +1505,7 @@ MonoBehaviour:
   speed: 30
   moveableDistance: 12
   mousePointer: {fileID: 1828731870}
+  spriteTr: {fileID: 0}
   jumpYac:
     serializedVersion: 2
     m_Curve:
@@ -1529,8 +1519,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.37452626
-      value: 0.89395565
+      time: 0.36294484
+      value: 0.26818508
       inSlope: -0.052402753
       outSlope: -0.052402753
       tangentMode: 0
@@ -1538,8 +1528,8 @@ MonoBehaviour:
       inWeight: 0.33333334
       outWeight: 0.33333334
     - serializedVersion: 3
-      time: 0.6944743
-      value: 0.0033496022
+      time: 0.44563395
+      value: 0.0039904714
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -1549,6 +1539,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  state: 0
   jumpYMultiply: 3
   jumpTimeMultiply: 1
 --- !u!4 &4615118232953982336 stripped
