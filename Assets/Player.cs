@@ -130,7 +130,7 @@ public class Player : MonoBehaviour
             else
             {
                 if (jumpState != JumpStateType.Jump)
-                    State = StateType.Idle;
+                    State = StateType.Idle; 
             }
         }
     }
