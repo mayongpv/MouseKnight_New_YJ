@@ -15,7 +15,7 @@ public class Goblin : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, watchRange);
 
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange)
+        Gizmos.DrawWireSphere(transform.position, attackRange);
 
     }
     Image hpBar;
@@ -35,8 +35,7 @@ public class Goblin : MonoBehaviour
         //{
         //    fsmChange = false;
 
-
-        //}
+        yield return null;
     }
     IEnumerator IdleCo()
     {

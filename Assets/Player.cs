@@ -1,58 +1,30 @@
+ï»¿using NaughtyAttributes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Serialization;
-using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
     public static Player instance;
+    private void Awake()
+    {
+        instance = this;
+        state = StateType.NotBegin;
+    }
+
+
+    [SerializeField] StateType state = StateType.Idle;
 
     public float speed = 5;
-    public float moveableDistance = 3;
+    float normalSpeed;
+    public float walkDiastance = 12;
+    public float stopdistance = 7;
     public Transform mousePointer;
     public Transform spriteTr;
     Plane plane = new Plane(new Vector3(0, 1, 0), 0);
-    private void Start()
-    {
-        animator = GetComponentInChildren<Animator>();
-        spriteTr = GetComponentInChildren<SpriteRenderer>().transform;
-    }
 
-    void Update()
-    {
-        Move();
-        Jump();
-
-    }
-
-    public AnimationCurve jumpYac; //jumpYac Á¡ÇÁÇÒ ¶§ y ¾Ö´Ï¸ŞÀÌ¼Ç
-    private void Jump()
-    {
-        if (jumpState == JumpStateType.Jump) // »óÅÂ°¡ Á¡ÇÁ¸é Á¡ÇÁ ¸øÇÏµµ·Ï - > ³ª°£´Ù
-            return;
-        if (Input.GetKeyDown(KeyCode.Mouse1))// Áï Á¡ÇÁÁß¿¡´Â ÀÌ ÄÚµå°¡ ½ÇÇàÀÌ ¾ÈµÊ
-        {
-            StartCoroutine(JumpCo());
-        }
-    }
-    public enum JumpStateType // Á¡ÇÁÁßÀÌ¶ó¸é Á¡ÇÁ ¸øÇÏ°Ô ÇÏ·Á°í Ãß°¡ÇÔ. 
-    {
-        Ground,
-        Jump,
-    }
-    public enum StateType
-    {
-        Idle,
-        JumpUp,
-        JumpDown,
-        Attack,
-        Walk,
-    }
-    [SerializeField] StateType state = StateType.Idle;
     StateType State
     {
         get { return state; }
@@ -61,85 +33,313 @@ public class Player : MonoBehaviour
             if (state == value)
                 return;
 
+            if (EditorOption.Options[OptionType.Playerìƒíƒœë³€í™”ë¡œê·¸])
+                Debug.Log($"state:{state}=>value:{value}");
 
             state = value;
             animator.Play(state.ToString());
         }
     }
-    Animator animator;
-    JumpStateType jumpState;
-    public float jumpYMultiply = 1;
-    public float jumpTimeMultiply = 1;
-    private IEnumerator JumpCo() //Á¡ÇÁÇÏ´Â Å¬·¡½º - Ä¿ºê·Î ±¸Çö : Ä¿ºê Æ÷ÀÎÆ® °ª¿¡ µû¶ó Á¡ÇÁ Çü½ÄÀÌ ´Ş¶óÁø´Ù. 
+
+
+    NavMeshAgent agent;
+
+    private void Start()
     {
-        jumpState = JumpStateType.Jump; // Á¡ÇÁ¸¦ ÇÏ¸é Á¡½º »óÅÂ: Á¡ÇÁ°¡ µÈ´Ù. 
+        normalSpeed = speed;
+        animator = GetComponentInChildren<Animator>();
+        spriteTr = GetComponentInChildren<SpriteRenderer>().transform;
+        agent = GetComponent<NavMeshAgent>();
+        spriteTrailRenderer = GetComponentInChildren<SpritTrailRenderer>();
+        spriteTrailRenderer.enabled = false;
+
+
+    }
+
+    void Update()
+    {
+        if (CanMoceState())
+        {
+            Move();
+            Jump();
+        }
+
+        bool isSucceedDash = Dash();
+        Attack(isSucceedDash);
+    }
+
+    private bool CanMoceState()
+    {
+        if (State == StateType.Attack)
+            return false;
+        if (State == StateType.TakeHit)
+            return false;
+        if (State == StateType.Death)
+            return false;
+
+        return true;
+    }
+    private void Attack(bool isSucceedDash)
+    {
+        if (isSucceedDash)
+            return;
+
+        if (Input.GetKeyUp(KeyCode.Mouse0))
+        {
+            StartCoroutine(AttackCo());
+        }
+
+    }
+    public float attackTime = 1;
+    public float attackApplyTime = 0.2f;
+    public LayerMask enermyLayer;
+    public SphereCollider attackCollider;
+    public float power = 10;
+
+    private IEnumerator AttackCo()
+    {
+        State = StateType.Attack;
+        yield return new WaitForSeconds(attackApplyTime);
+
+        Collider[] enemyColliders = Physics.OverlapSphere(
+            attackCollider.transform.position, attackCollider.radius.enemyLayer);
+        foreach (var item in enemyColliders)
+        {
+            item.GetComponent<Goblin>().TakeHit(power);
+        }
+
+        yield return new WaitForSeconds(attackTime);
+        State = StateType.Idle;
+    }
+    [Foldout("ëŒ€ì‹œ")] public float dashableDistance = 10;
+    [Foldout("ëŒ€ì‹œ")] public float dashableTime = 0.4f;
+
+    float mouseDownTime;
+    Vector3 mouseDownPosition;
+    private bool Dash()
+    {
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            mouseDownTime = Time.time;
+            mouseDownPosition = Input.mousePosition;
+        }
+
+        if (Input.GetKeyUp(KeyCode.Mouse0))
+        {
+            bool isDashDrag = IsSucceesDashDrag();
+            if (isDashDrag)
+            {
+                StartCoroutine(DashCo());
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    [Foldout("ëŒ€ì‚¬")] public float dashTime = 0.3f;
+
+    public float hp = 100;
+    internal void TakeHit(int damage)
+    {
+        if (State == StateType.Death)
+            return;
+
+        hp -= damage;
+        StartCoroutine(TakeHitCo());
+
+    }
+
+    public float takeHitTime = 0.3f;
+    private IEnumerator TakeHitCo()
+    {
+        State = StateType.TakeHit;
+        yield return new WaitForSeconds(takeHitTime);
+
+        if (hp > 0)
+            State = StateType.Idle;
+        else
+            StartCoroutine(DeathCo());
+    }
+
+    public float deathTime = 0.5f;
+
+    private IEnumerator DeathCo()
+    {
+        State = StateType.Death;
+        yield return new WaitForSeconds(deathTime);
+        Debug.LogWarning("ê²Œì„ì¢…ë£Œ");
+    }
+
+    SpriteTrailRenderer.SpriteTrailRenderer spriteTrailRenderer;
+    [Foldout("ëŒ€ì‹œ")] public float dashSpeedMultiplySpeed = 4f;
+    Vector3 dashDirection;
+    private IEnumerator DashCo()
+    {
+        /* ë°©í–¥ì„ ë°”ê¿€ ìˆ˜ ì—†ê²Œ -> ì§„í–‰ë°©í–¥ìœ¼ë¡œ ì´ë™ -> ëŒ€ê°ì„ ìœ¼ë¡œ ì´ë™-> ë“œë˜ê·¸ ë°©í–¥ ì´ë™í• ê±´ì§€
+         * í”Œë ˆì´ì–´ ì´ë™ë°©í–¥ X ì´ë™í• ê±´ì§€
+         * DashDirection x ë°©í–¥ë§Œ ì‚¬ìš©
+         */
+        spriteTrailRenderer.enabled = true;
+        dashDirection = Input.mousePosition - mouseDownPosition;
+        dashDirection.y = 0;
+        dashDirection.x = 0;
+        dashDirection.Normalize();
+        speed = normalSpeed * dashSpeedMultiplySpeed;
+        State = StateType.Dash;
+        yield return new WaitForSeconds(dashTime);
+        speed = normalSpeed;
+        State = StateType.Idle;
+        spriteTrailRenderer.enabled = false;
+    }
+
+    private bool isSucceesDashDrag()
+    {
+        //ì‹œê°„ ì²´í¬
+        float dragTime = Time.time - mouseDownTime;
+        if (dragTime > dashableTime)
+            return false;
+
+        float dragDistance = Vector3.Distance(mouseDownPosition, Input.mousePosition);
+        if (dragDistance < dashableDistance)
+            return false;
+
+        return true;
+    }
+
+
+    [BoxGroup("Jump")] public AnimationCurve jumpYac; //jumpYac ì í”„í•  ë•Œ y ì• ë‹ˆë©”ì´ì…˜
+    private void Jump()
+    {
+        if (jumpState == JumpStateType.Jump) // ìƒíƒœê°€ ì í”„ë©´ ì í”„ ëª»í•˜ë„ë¡ - > ë‚˜ê°„ë‹¤
+            return;
+        if (Input.GetKeyDown(KeyCode.Mouse1))// ì¦‰ ì í”„ì¤‘ì—ëŠ” ì´ ì½”ë“œê°€ ì‹¤í–‰ì´ ì•ˆë¨
+        {
+            StartCoroutine(JumpCo());
+        }
+    }
+    public enum JumpStateType // ì í”„ì¤‘ì´ë¼ë©´ ì í”„ ëª»í•˜ê²Œ í•˜ë ¤ê³  ì¶”ê°€í•¨. 
+    {
+        Ground,
+        Jump,
+    }
+    public enum StateType
+    {
+        NotBegin,
+        Idle,
+        Walk,
+        JumpUp,
+        JumpDown,
+        Dash,
+        Attack,
+        TakeHit,
+        Death
+    }
+
+    Animator animatior;
+    JumpStateType jumpStateType;
+    [BoxGroup("ì í”„")] public float jumpYMultiply = 1;
+    [BoxGroup("ì í”„")] public float jumpTimeMultiply = 1;
+
+    private IEnumerator JumpCo()
+    {
+        jumpStateType = JumpStateType.Jump;
         State = StateType.JumpUp;
-        float jumpeStartTime = Time.time;
-        float jumpDuration = jumpYac[jumpYac.length - 1].time; //Æ÷ÀÎÆ®ÀÇ °³¼ö-1 ÀÇ ½Ã°£ ÇÏ¸é ³¡³ª´Â ½Ã°£ 
-        float jumpEndTime = jumpeStartTime + jumpDuration;
+        float jumpStateTime = Time.time;
+        float jumpDuration = jumpYac[jumpYac.length - 1].time;
+        jumpDuration *= jumpTimeMultiply;
+        float jumpEndTime = jumpStartTime + jumpDuration;
         float sumEvaluateTime = 0;
-        float previousY = 0;
+        float previousY = float.MinValue;
+        agent.enabled = false;
 
         while (Time.time < jumpEndTime)
         {
             float y = jumpYac.Evaluate(sumEvaluateTime / jumpTimeMultiply);
-            y *= jumpYMultiply;
+            y *= jumpYMultiply * Time.deltaTime;
             transform.Translate(0, y, 0);
-            yield return null; //¹İÈ¯°ª¿¡ ´ëÇÑ °³³ä?
+            yield return null;
 
-            if (previousY > y)
+            if (previousY > transform.position.y)
             {
-                //¶³¾îÁö´Â ¸ğ¼ÇÀ¸·Î ¹Ù²ÙÀÚ
                 State = StateType.JumpDown;
             }
-            previousY = y;
+            if (transform.position.y < 0)
+            {
+                break;
+            }
 
-            sumEvaluateTime *= Time.deltaTime;
-
+            previousY = transform.position.y;
+            sumEvaluateTime += Time.deltaTime;
         }
+        agent.enabld = true;
         jumpState = JumpStateType.Ground;
+        State = StateType.Idle;
+
     }
 
-    private void Move() // ¸¶¿ì½º Å¬¸¯À¸·Î ¿òÁ÷ÀÌ´Â Å¬·¡½º
+    private void Move() // ë§ˆìš°ìŠ¤ í´ë¦­ìœ¼ë¡œ ì›€ì§ì´ëŠ” í´ë˜ìŠ¤
     {
+        if (Time.timeScale == 0)
+            return;
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
         if (plane.Raycast(ray, out float enter))
         {
             Vector3 hitPoint = ray.GetPoint(enter);
             mousePointer.position = hitPoint;
-            float distance = Vector3.Distance(hitPoint, transform.position); //µÎ°³ »çÀÌÀÇ °Å¸®¸¦ ÃøÁ¤ÇÏ°Ú´Ù. 
-            if (distance > moveableDistance)
-            {
-                var dir = hitPoint - transform.position;
+            float distance = Vector3.Distance(hitPoint, transform.position); //ë‘ê°œ ì‚¬ì´ì˜ ê±°ë¦¬ë¥¼ ì¸¡ì •í•˜ê² ë‹¤. 
+
+            float movableDistance = stopDistance;
+            // Stateê°€ Walk ì¼ë• 7(stopDistance)ì‚¬ìš©.
+            // Idleì—ì„œ Walkë¡œ ê°ˆë• 12(WalkDistance)ì‚¬ìš©
+            if (State == StateType.Idle)
+                movableDistance = walkDistance;
+
+            var dir = hitPoint - transform.position;
+
+            if (State == StateType.Dash)
                 dir.Normalize();
-                transform.Translate(dir * speed * Time.deltaTime, Space.World); ; // ¿òÁ÷ÀÌ´Ï±î ÀÌ·¸°Ô ½áÁÖ°í  dirÀÌ ¿òÁ÷ÀÌ´Â ¹æÇâ, 
 
-                //¹æÇâ(dir) µû¶ó¼­ 
-                // ¿À¸¥ÂÊÀÌ¸é y :0. sprite x = 45
-                //¿ŞÂÊ Y : 180, sprite x = -45;
-
-                bool isRightSide = dir.x > 0;
-                if (isRightSide)
-                {
-                    transform.rotation = Quaternion.Euler(Vector3.zero);
-                    spriteTr.rotation = Quaternion.Euler(45, 0, 0);
-                }
-                else
-                {
-                    transform.rotation = Quaternion.Euler(0, 180, 0);
-                    spriteTr.rotation = Quaternion.Euler(-45, 180, 0);
-                }
-
-                if (jumpState != JumpStateType.Jump)
+            if (distance > movableDistance || State == StateType.Dash)
+            {
+                transform.Translate(dir * speed * Time.deltaTime, Space.World); ; // ì›€ì§ì´ë‹ˆê¹Œ ì´ë ‡ê²Œ ì¨ì£¼ê³   dirì´ ì›€ì§ì´ëŠ” ë°©í–¥, 
+                if (ChangeableState())
                     State = StateType.Walk;
-
             }
             else
             {
-                if (jumpState != JumpStateType.Jump)
-                    State = StateType.Idle; 
+                if (ChangeableState())
+                    State = StateType.Idle;
+            }
+
+            //ë°©í–¥(dir)ì— ë”°ë¼ì„œ
+            //ì˜¤ë¥¸ìª½ì´ë¼ë©´ Y : 0
+            //ì™¼ìª½ì´ë¼ë©´ Y : 180
+
+            bool isRightSide = dir.x > 0;
+            if (isRightSide)
+            {
+                transform.rotation = Quaternion.Euler(Vector3.zero);
+            }
+            else
+            {
+                transform.rotation = Quaternion.Euler(0, 180, 0);
+            }
+
+            bool ChangeableState()
+            {
+                if (jumpState == JumpStateType.Jump)
+                    return false;
+
+                if (state == StateType.Dash)
+                    return false;
+
+                return true;
             }
         }
     }
 }
+
+
