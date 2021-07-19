@@ -1,4 +1,4 @@
-﻿using NaughtyAttributes;
+﻿//using NaughtyAttributes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -111,8 +111,8 @@ public class Player : MonoBehaviour
         State = StateType.Idle;
     }
 
-    [Foldout("대시")] public float dashableDistance = 10;
-    [Foldout("대시")] public float dashableTime = 0.4f;
+    /*[Foldout("대시")] */public float dashableDistance = 10;
+  /*  [Foldout("대시")]*/ public float dashableTime = 0.4f;
     float mouseDownTime;
     Vector3 mouseDownPosition;
     private bool Dash()
@@ -138,7 +138,7 @@ public class Player : MonoBehaviour
         return false;
     }
 
-    [Foldout("대시")] public float dashTime = 0.3f;
+   /* [Foldout("대시")] */public float dashTime = 0.3f;
 
     public float hp = 100;
     internal void TakeHit(int damge)
@@ -170,7 +170,7 @@ public class Player : MonoBehaviour
         Debug.LogWarning("게임 종료");
     }
     SpriteTrailRenderer.SpriteTrailRenderer spriteTrailRenderer;
-    [Foldout("대시")] public float dashSpeedMultiplySpeed = 4f;
+    /*[Foldout("대시")]*/ public float dashSpeedMultiplySpeed = 4f;
     Vector3 dashDirection;
     private IEnumerator DashCo()
     {
@@ -205,7 +205,7 @@ public class Player : MonoBehaviour
         return true;
     }
 
-    [BoxGroup("점프")] public AnimationCurve jumpYac;
+    /*[BoxGroup("점프")] */public AnimationCurve jumpYac;
     private void Jump()
     {
         if (jumpState == JumpStateType.Jump)
@@ -235,8 +235,8 @@ public class Player : MonoBehaviour
 
     Animator animator;
     JumpStateType jumpState;
-    [BoxGroup("점프")] public float jumpYMultiply = 1;
-    [BoxGroup("점프")] public float jumpTimeMultiply = 1;
+    /*[BoxGroup("점프")]*/ public float jumpYMultiply = 1;
+    /*[BoxGroup("점프")]*/ public float jumpTimeMultiply = 1;
     private IEnumerator JumpCo()
     {
         jumpState = JumpStateType.Jump;
